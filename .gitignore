@@ -1,0 +1,26 @@
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+build/
+dist/
+
+# downloaded data
+demos/
+*.dem
+*.dem.gz
+*.dem.bz2
+*.dem.zst
+*.rar
+*.zip
+*.7z
+*.part
+manifest.jsonl
+failed.jsonl
+
+# local state / cookies
+hltv-state.json
+*.hltv-state.json
+.DS_Store
