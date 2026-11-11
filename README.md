@@ -50,6 +50,23 @@ hltv-demo-fetch --help
 > `playwright` 只在需要过验证时使用；浏览器可以用系统 Chrome，不必下载
 > Playwright 自带 Chromium。
 
+### Docker
+
+```bash
+# 快速路径（curl_cffi，镜像小）
+docker build -t hltv-demo-fetch .
+docker run --rm -v "$PWD/demos:/demos" hltv-demo-fetch \
+  --limit 5 --out /demos
+
+# 带 Chromium 的验证兜底（镜像约 +500MB）
+docker build --build-arg WITH_BROWSER=1 -t hltv-demo-fetch:browser .
+docker run --rm -v "$PWD/demos:/demos" hltv-demo-fetch:browser \
+  --limit 5 --out /demos --engine browser
+```
+
+容器里没有桌面，CDN 的“点按钮”验证可能过不去；生产环境建议 `--proxy` 或
+`--engine curl`，需要浏览器兜底时用宿主机 `--cdp-url`。
+
 ## 快速开始
 
 ```bash
@@ -212,6 +229,7 @@ RUN_BROWSER_TESTS=1 python -m unittest tests.test_hltv_demo_fetch.BrowserDownloa
 ## 目录
 
 ```
+Dockerfile         可选容器镜像（WITH_BROWSER=1 带 Chromium）
 hltv_demo_fetch/
   cli.py          CLI
   hltv.py         HLTV 页面解析 + job 构建

@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+.venv/
+demos/
+.pytest_cache/
+.git/
+*.dem
+*.rar
+*.7z
+*.zip
