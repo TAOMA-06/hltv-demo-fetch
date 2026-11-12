@@ -642,7 +642,14 @@ class BrowserSession:
                     timeout=int((timeout or self.config.timeout) * 1000),
                 )
             except Exception as error:
-                if "ERR_ABORTED" not in str(error):
+                # Navigating straight to /download/demo/<id> on an already
+                # authenticated browser starts the file download instead of
+                # loading a page; Playwright reports that as "Download is
+                # starting".  The download event listener above still gets it.
+                if not any(
+                    marker in str(error)
+                    for marker in ("ERR_ABORTED", "Download is starting")
+                ):
                     raise
 
             deadline = time.monotonic() + max(
@@ -970,6 +977,20 @@ class HltvFetcher:
         timeout: Optional[float] = None,
         force: bool = False,
     ) -> DownloadResult:
+        if self.engine in ("browser", "cdp"):
+            # An authenticated Chrome redirects /download/demo/<id> straight
+            # into the archive.  Download it there first instead of trying to
+            # read a page that never renders; fall back to URL resolution and
+            # the HTTP path when the browser cannot start the download.
+            demo_page = f"{HLTV_BASE}/download/demo/{demo_id}"
+            try:
+                return self._download_via_browser(
+                    demo_page,
+                    Path(destination).expanduser(),
+                    timeout=timeout or self.config.timeout,
+                )
+            except DownloadError:
+                pass
         cdn = self.resolve_demo_url(demo_id)
         return self.download_file(
             cdn,
