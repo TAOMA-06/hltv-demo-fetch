@@ -67,6 +67,17 @@ docker run --rm -v "$PWD/demos:/demos" hltv-demo-fetch:browser \
 容器里没有桌面，CDN 的“点按钮”验证可能过不去；生产环境建议 `--proxy` 或
 `--engine curl`，需要浏览器兜底时用宿主机 `--cdp-url`。
 
+国内默认使用 daocloud 基础镜像、清华 PyPI 和 npmmirror 的 Playwright 下载源；
+海外构建可覆盖：
+
+```bash
+docker build \
+  --build-arg PYTHON_IMAGE=python:3.12-slim \
+  --build-arg PIP_INDEX=https://pypi.org/simple \
+  --build-arg PLAYWRIGHT_DOWNLOAD_HOST= \
+  -t hltv-demo-fetch .
+```
+
 ## 快速开始
 
 ```bash

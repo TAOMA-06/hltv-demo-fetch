@@ -6,15 +6,18 @@
 # The fast path only needs curl_cffi.  Build with
 # `--build-arg WITH_BROWSER=1` to add Playwright + Chromium for the
 # Cloudflare managed-challenge fallback (adds ~500 MB).
-FROM docker.m.daocloud.io/library/python:3.12-slim
+ARG PYTHON_IMAGE=docker.m.daocloud.io/library/python:3.12-slim
+FROM ${PYTHON_IMAGE}
 
 ARG PIP_INDEX=https://pypi.tuna.tsinghua.edu.cn/simple
 ARG WITH_BROWSER=0
+ARG PLAYWRIGHT_DOWNLOAD_HOST=https://cdn.npmmirror.com/binaries/playwright
 
 ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
-    PIP_INDEX_URL=${PIP_INDEX}
+    PIP_INDEX_URL=${PIP_INDEX} \
+    PLAYWRIGHT_DOWNLOAD_HOST=${PLAYWRIGHT_DOWNLOAD_HOST}
 
 # bsdtar (libarchive) handles RAR5, zip, 7z and tar without extra tools.
 RUN apt-get update \
@@ -22,6 +25,9 @@ RUN apt-get update \
       ca-certificates \
       libarchive-tools \
       unzip \
+ && if [ "$WITH_BROWSER" = "1" ]; then \
+      apt-get install -y --no-install-recommends libatomic1 xvfb; \
+    fi \
  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -29,7 +35,7 @@ COPY requirements.txt ./
 RUN pip install -r requirements.txt
 
 RUN if [ "$WITH_BROWSER" = "1" ]; then \
-      pip install playwright && python -m playwright install --with-deps chromium; \
+      python -m playwright install --with-deps chromium; \
     fi
 
 COPY . .
